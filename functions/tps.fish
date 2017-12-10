@@ -84,23 +84,29 @@ function tps
       tps_update
     end
   end
-  source $HOME/.tps/venv/activate.fish
 
-  set objdir (mach environment --format=json | jq -r '.topobjdir')
 
-  if test "$binary" = "auto"
-    if test -d $objdir/dist/Nightly.app
-      set binary $objdir/dist/Nightly.app/Contents/MacOS/firefox
-    else
-      # linux? untested.
-      set binary $objdir/dist/bin/firefox
+  if test "$binary" = "auto";
+    set objdir (mach environment --format=json | jq -r '.topobjdir')
+    if not test -f $objdir/config.status
+      echo "Warning: No binary provided and we don't seem to be built yet. Trying anyway"
+    end
+
+    set -l binscript 'import mozbuild.base; print(mozbuild.base.MozbuildObject.from_environment().get_binary_path("app"))'
+    set binary (echo $binscript | mach python 2> /dev/null)
+    if test -z "$binary"; or not test -f "$binary"
+      echo "Error: unable to locate firefox binary! Do you need to do a build?"
+      return 1
     end
   end
+  echo "Running TPS using binary $binary"
+
+  source $HOME/.tps/venv/bin/activate.fish
 
   if test $testfile = "all"
-    runtps --debug --binary $binary --configfile $config.json
+    runtps --debug --binary $binary --configfile $HOME/.tps/$config.json
   else
-    runtps --debug --binary $binary --configfile $config.json --testfile $argv[1]
+    runtps --debug --binary $binary --configfile $HOME/.tps/$config.json --testfile $argv[1]
   end
   popd
   deactivate

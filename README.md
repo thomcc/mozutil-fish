@@ -1,6 +1,6 @@
 # mozutil-fish
 
-utilities for working with mozilla stuff
+utilities for working with mozilla stuff.
 
 ## install/setup
 
@@ -11,11 +11,24 @@ fisher thomcc/mozutil-fish
 set -U GECKO /path/to/gecko
 ```
 
-the tps and fxacct commands also require you to have installed `jq` and `node`.
+the tps and fxacct commands also require you to have installed `jq` and `node`. most stuff assumes you're using git to interact with mozilla-central, and not hg.
 
-## commands
+## documentation
 
-### mozconfig
+### features
+
+- `mozconfig`: a reimplementation of [mozconfigwrapper](https://github.com/ahal/mozconfigwrapper) that works with fish.
+- `mach`: a mach wrapper with completion that works outside of your gecko repo.
+- `tps`: run [tps tests](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/TPS_Tests) with less pain (manages configs, updating, activating/deactivating venv, setting MOZ_HEADLESS, etc), and has autocompletion for the tests in the test dir.
+- `fxacct`: a tool for creating and destroying firefox accounts, expecially ones with restmail email addresses. mainly intended for use with `tps`.
+- `bz`: try to open bugzilla for the current bug (it assumes you name your branches like `bug/<bugno>-stuff-blah-blah`)
+- `bzsearch`: quicksearch bugzilla
+- `sf`: quicksearch searchfox
+- `mdn`: quicksearch mdn
+
+### commands
+
+#### mozconfig
 
 not materially better than [mozconfigwrapper](https://github.com/ahal/mozconfigwrapper), but works with fish
 
@@ -37,22 +50,22 @@ Utility to make working with mozconfigs easier.
 
 ```
 
-#### buildwith, mkmozconfig
+##### buildwith, mkmozconfig
 
 aliases for `mozconfig use` and `mozconfig new`.
 
-### mach
+#### mach
 
 mach wrapper for fish with autocompletion, that works (well, as much as possible) even when not in the same directory as mach.
 
-### gecko_root
+#### gecko_root
 
 prints the current if you're in one, otherwise prints `$GECKO`. used to implement
 most of the others. two options: `-q` and `-r`. `-q` (quiet) means "return 0 if we're in a
 gecko root" and `-r` (require) means "error instead of printing $GECKO if we aren't in one".
 
 
-### tps
+#### tps
 
 helper to run [tps](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/TPS_Tests) tests. see also [`tps_setup`](#tps_setup), [`tps_update`](#tps_update).
 
@@ -89,25 +102,29 @@ options:
   --prod, -P         equivalent to --config prod
 ```
 
-### tps_setup
+#### tps_setup
+
+probably will be rolled into `tps` soon.
 
 - sets folders up so that the `tps` command works
 - will create restmail firefox accounts for you on stage, dev, and prod.
 - will make tps config files that you can use to run using these.
 - just run `tps_setup` and it will prompt you for the rest.
 
-### tps_update
+#### tps_update
 
-updates your tps venv. that's all
+updates your tps venv. that's all. probably will be rolled into `tps` soon.
 
-### fxacct
+#### fxacct
 
-create and delete fxaccounts locally. required by tps, but who knows.
+create and delete fxaccounts locally. accounts on restmail restmail required by tps, but who knows.
 
 ```
-$ fxacct create 'foobar@baz.quux' 'hunter2'
-<creates an account on prod>
-$ fxacct create 'my-tps-acct@restmail.net' 'p455w0rd' stage
+$ fxacct create 'foobar@restmail.net' 'hunter2'
+<creates an account on prod and autoverifies it since it's a resmail account>
+$ fxacct destroy 'foobar@restmail.net' 'hunter2'
+<cleans up after previous command>
+$ fxacct create 'my-tps-acct@baz.quux' 'p455w0rd' stage
 <creates an account on stage>
 $ fxacct create 'stuff@stuff.example' 'qwerty' dev
 <creates an account on dev>

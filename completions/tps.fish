@@ -1,7 +1,7 @@
 
 function __tps_testfiles
   echo "all"
-  for file in (command ls (gecko_root -a)/services/sync/tests/tps/)
+  for file in (command ls (gecko_root)/services/sync/tests/tps/)
     if string match -q \*.js $file
       echo $file
     end

@@ -7,7 +7,6 @@ function gecko_root
       if not set -q _flag_quiet; echo $GECKO; end
       return 0
     end
-    return 1
   end
   set -l path $PWD
   while test $path != "."; and test $path != "/"
@@ -16,6 +15,9 @@ function gecko_root
       return 0
     end
     set path (dirname $path)
+  end
+  if set -q GECKO; and not set -q _flag_quiet
+    echo $GECKO
   end
   return 1
 end

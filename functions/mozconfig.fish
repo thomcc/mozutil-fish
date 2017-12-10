@@ -96,7 +96,7 @@ end
 function __mozconfig_list
   set -l active (basename $MOZCONFIG)
   for config in (command ls $HOME/.mozconfigs)
-    if test $config = $active
+    if test $config = $active; and test "$argv[1]" != '-q'
       echo $config\*
     else
       echo $config
@@ -141,7 +141,7 @@ function mozconfig -d "Utility to make working with mozconfigs easier"
     __mozconfig_show
 
   case list
-    __mozconfig_list
+    __mozconfig_list $argv[2..-1]
 
   case new
     __mozconfig_new $argv[2..-1]
@@ -149,11 +149,11 @@ function mozconfig -d "Utility to make working with mozconfigs easier"
   case use
     __mozconfig_use $argv[2..-1]
 
-  case edit
+  case edit -e
     if set -q argv[2]
       __mozconfig_edit $argv[2]
     else
-      __mozconfig_edit $current
+      __mozconfig_edit $MOZCONFIG
     end
 
   case '*'

@@ -9,7 +9,7 @@ function tps_update
     echo "Previous installation moved to $HOME/.tps/last-venv"
     mv $HOME/.tps/venv $HOME/.tps/last-venv
   end
-  pushd (gecko_root -a)/testing/tps
+  pushd (gecko_root)/testing/tps
   echo "..."
   ./create_venv.py $HOME/.tps/venv > /dev/null
   popd

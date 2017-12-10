@@ -8,18 +8,13 @@ complete -xc mozconfig -n '__fish_is_first_token' -a 'use' -d "Change mozconfigs
 complete -xc mozconfig -n '__fish_is_first_token' -a 'list' -d "List active mozconfigs"
 complete -xc mozconfig -n '__fish_is_first_token' -a 'edit' -d "Edit mozconfig"
 
-complete -xc mozconfig -n '__fish_seen_subcommand_from use' -a '(mozconfig list)'
-complete -xc mozconfig -n '__fish_seen_subcommand_from edit' -a '(mozconfig list)'
+complete -xc mozconfig -n '__fish_seen_subcommand_from use' -a '(mozconfig list -q)' -d "change"
+complete -xc mozconfig -n '__fish_seen_subcommand_from edit' -a '(mozconfig list -q)'
 
-complete -xc buildwith -a "(command ls $BUILDWITH_HOME)" -d "Set mozconfig"
+complete -xc buildwith -a "(mozconfig list -q)" -d "Set mozconfig"
 
-if test -e $BUILDWITH_HOME/.active
-  complete -xc buildwith -a "(basename (mozconfig))" -d "current mozconfig"
+if test -e $HOME/.mozconfigs/.active
+  complete -xc buildwith -a "(basename (mozconfig show))" -d "current"
+  complete -xc mozconfig -n '__fish_seen_subcommand_from use' -a '(basename (mozconfig show))' -d "current"
+  complete -xc mozconfig -n '__fish_seen_subcommand_from edit' -a '(basename (mozconfig show))' -d "current"
 end
-
-
-if test -e $BUILDWITH_HOME/.active
-  complete -xc buildwith -a "(command cat $BUILDWITH_HOME/.active)" -d "current mozconfig"
-end
-
-
