@@ -83,3 +83,11 @@ complete -c mach -n "__fish_seen_subcommand_from try" -l no-artifact -d "Disable
 complete -c mach -n "__fish_seen_subcommand_from try" -a "mozharness:\ --geckoProfile" -d "enable profiling"
 
 # todo: more, docs, etc.
+
+# too slow to use for completion...
+#
+# function __mach_find_xpcshell_tests
+#   for file in (find (gecko_root) -type f -name xpcshell.ini -not -path (gecko_root)'/obj*');
+#     cat $file | string replace -fr '^\[([^\]]+.js)\]' (dirname $file)'$1';
+#   end
+# end

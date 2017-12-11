@@ -85,35 +85,28 @@ $ tps -S all
 <runs tps against all tests on stage>
 
 $ tps -h
-usage: tps [options] TEST
+usage: tps [command] [options] TEST
+  Makes running tps easier.
 
-- makes running tps easier. see also tps_update and tps_setup
-- TEST may be be one of the test files or the string 'all'
+commands:
+  tps help           Print this message
+  tps run [TEST]     (default) run a test by name, or `all` for all tests
+  tps setup          Install a new venv, setup configs, and create test accounts
+  tps update         Update the TPS venv then exit
 
 options:
-  --help, -h         print this and exit
-  --no-headless      don't run in headless mode
+  --help, -h         print this message and exit
+  --no-headless, -H  don't run in headless mode
   --binary, -b PATH  specify binary (defaults to auto)
   --update, -u       update the tps venv even if it seems unnecessary
-  --no-update        don't bother checking if we should update the tps venv
+  --no-update, -n    don't bother checking if we should update the tps venv
   --config, -c CONF  use the specified config (prod|dev|stage = prod)
   --stage, -S        equivalent to --config stage
   --dev, -D          equivalent to --config dev
   --prod, -P         equivalent to --config prod
+  --raw, -r          Don't do any formatting of the logfile (by default it will
+                     try to make things clearer)
 ```
-
-#### tps_setup
-
-probably will be rolled into `tps` soon.
-
-- sets folders up so that the `tps` command works
-- will create restmail firefox accounts for you on stage, dev, and prod.
-- will make tps config files that you can use to run using these.
-- just run `tps_setup` and it will prompt you for the rest.
-
-#### tps_update
-
-updates your tps venv. that's all. probably will be rolled into `tps` soon.
 
 #### fxacct
 
