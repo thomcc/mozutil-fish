@@ -8,9 +8,12 @@ function bz -d "Try and open bugzilla to the currently active bug (no args), or 
     set arg (string replace -r '\bme\b' $me $arg)
     set arg (string replace -r '\br:' 'reporter:' $arg)
     bzsearch $arg
-  else if gecko_root -q
-    set branch (git_branch_name)
-    set bugno (string replace -ra '[^\d]' '' $branch 2>/dev/null)
+  else if set branch (git_branch_name)
+    if set match (string match -ir '(?:bug|review|rev)[^\d]*(?:(\d+)[-/])?(.*)$' $branch)
+      set bugno $match[2]
+    else
+      set bugno (string replace -ra '[^\d]' '' $branch 2>/dev/null)
+    end
     if test -z "$bugno"; and test "$branch" != 'central'
       set last_commit (git log -n1 --pretty=format:%s 2>/dev/null)
       if test -n "$last_commit"

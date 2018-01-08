@@ -115,73 +115,59 @@ function tps
     set argv $argv[2..-1]
   end
 
-  set -l use_headless 1
-  set -l raw_output
-  set -l ignore_unused ''
-
-  getopts $argv | while read -l key value
-    switch $key
-
-      case h help
-        __tps_usage
-        return
-
-      case no-headless H
-        set -e use_headless
-
-      case c config
-        set config $value
-        continue
-
-      case P prod
-        set config prod
-
-      case S stage
-        set config stage
-
-      case D dev
-        set config dev
-
-      case b binary
-        set binary $value
-        continue
-
-      case u update
-        set update "always"
-
-      case U no-update
-        set update "no"
-      case r raw
-        set raw_output 1
-
-      case i ignore-unused-engines only-used
-        set ignore_unused '--ignore-unused-engines'
-
-      case _
-    end
-    switch $value
-      case all '*.js' '*.json'
-        if test -n "$testfile"
-          echo "Error: More than one testfile argument isn't supported at the moment (todo)"
-          __tps_usage
-          return 1
-        end
-        set testfile $value
-      case 
-    end
+  argparse --name tps -x 'c,S,D,P' -x 'n,u' -N 0 -X 1 'h/help' 'H/no-headless' \
+    'b/binary=' 'n/no-update' 'u/update' 'c/config=' 'S/stage' 'D/dev' \
+    'P/prod' 'r/raw' 'i/only-used' -- $argv
+  or begin
+    __tps_usage
+    return 1
   end
 
+  if set -q _flag_help
+    __tps_usage
+    return
+  end
+
+  set -l ignore_unused ''
+  if set -q _flag_i
+    set ignore_unused '--ignore-unused-engines'
+  end
+
+  set -lx MOZ_HEADLESS 1
+  if set -q _flag_H
+    set -e MOZ_HEADLESS
+  end
+
+  set config prod
+  if set -q _flag_config
+    set config $_flag_config
+  else if set -q _flag_stage
+    set config stage
+  else if set -q _flag_prod
+    set config prod
+  else if set -q _flag_dev
+    set config dev
+  end
+
+  set -l test_root (gecko_root)/services/sync/tests/tps
+
+  set -l testfile $argv[1]
   if test -z "$testfile"
     echo "Expected a file argument!"
     __tps_usage
     return
   end
 
+  if test $testfile != 'all'; and not test -f $test_root/$testfile
+    echo "tps: Test file '$testfile' doesn't look like a valid test file (or 'all')..."
+    return
+  end
+
   pushd (gecko_root)
 
-  if test $update = "always"
+  if set -q _flag_update
     __tps_update
-  else if test $update = "auto"
+  else if not set -q _flag_n
     if test (stat -f "%m" $HOME/.tps/venv) -lt (git log -n 1 --pretty=format:%at -- (gecko_root)/testing/tps)
       echo "Commits made into TPS dir, updating ~/.tps/venv in 5s"
       sleep 5
@@ -189,8 +175,10 @@ function tps
     end
   end
 
-  if test "$binary" = "auto";
-    set objdir (mach environment --format=json | jq -r '.topobjdir')
+  set -l binary
+
+  if not set -q _flag_binary; or test "$_flag_binary" = 'auto'
+    set -l objdir (mach environment --format=json | jq -r '.topobjdir')
     if not test -f $objdir/config.status
       echo "Warning: No binary provided and we don't seem to be built yet. Trying anyway"
     end
@@ -201,18 +189,20 @@ function tps
       echo "Error: unable to locate firefox binary! Do you need to do a build?"
       return 1
     end
+  else
+    if not test -f $_flag_binary
+      echo "Error: Binary provided but doesn't seem usable..."
+      return 1
+    end
   end
   echo "Running TPS using binary $binary"
 
   source $HOME/.tps/venv/bin/activate.fish
 
-  set -xl MOZ_HEADLESS 1
-  if test -z "$use_headless"
-    set -e MOZ_HEADLESS
-  end
-  set tps_args $ignore_unused --debug --binary $binary --configfile $HOME/.tps/$config.json
-  set multiple_tests
-  if test $testfile = "all"
+  set -l tps_args $ignore_unused --debug --binary $binary --configfile $HOME/.tps/$config.json
+
+  set -l multiple_tests
+  if test "$testfile" = "all"
     set multiple_tests 1
     set testfile all_tests.json
   else
@@ -221,7 +211,7 @@ function tps
       set multiple_tests 1
     end
   end
-  if test -n "$raw_output"
+  if set -q _flag_raw
     runtps $tps_args
   else
     set -l have_colors
@@ -237,28 +227,27 @@ function tps
     end
     # all the code beyond here is concerned with making the logs colored,
     # and more easily digestable.
-    set test_root (gecko_root)/services/sync/tests/tps
-    set all_colors green yellow blue magenta cyan \
+    set -l all_colors green yellow blue magenta cyan \
         brgreen bryellow brblue brmagenta brcyan
-    set color_idx 1
+    set -l color_idx 1
 
-    set logger_colors '{}'
-    set cur_test
-    set cur_phase '(setup)'
-    set cur_phase_json '{}'
-    set cur_profile '{}'
-    set cur_action
-    set log_prefix ''
-    set num_tests 1
-    set test_idx 0
-    set phase_idx 0
-    set num_phases 0
-    set test_msg ''
-    set phase_msg ''
-    set num_profiles 0
-    set clean_idx 0
-    set testpad ''
-    set prefix ''
+    set -l logger_colors '{}'
+    set -l cur_test
+    set -l cur_phase '(setup)'
+    set -l cur_phase_json '{}'
+    set -l cur_profile '{}'
+    set -l cur_action
+    set -l log_prefix ''
+    set -l num_tests 1
+    set -l test_idx 0
+    set -l phase_idx 0
+    set -l num_phases 0
+    set -l test_msg ''
+    set -l phase_msg ''
+    set -l num_profiles 0
+    set -l clean_idx 0
+    set -l testpad ''
+    set -l prefix ''
     # set -l phase_start_time 0
     if test -n "$multiple_tests"
       set num_tests (cat $test_root/$testfile | jq -r '.tests | length' ^ /dev/null)
@@ -350,6 +339,7 @@ function tps
             echo -s $prefix "{$cur_action} " (__tps_setcolor green) $line (__tps_setcolor normal)
           end
           set prefix "$prefix "
+          set cur_action ''
           continue
         end
 
@@ -373,7 +363,6 @@ function tps
         case FATAL ERROR
           set levelcolor brred
         case WARN
-          set synclogline[4] "$synclogline[4] "
           set levelcolor bryellow
         case INFO CONFIG
           set levelcolor yellow
