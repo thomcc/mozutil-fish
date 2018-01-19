@@ -11,7 +11,7 @@ function __tps_usage
   echo ""
   echo "options:"
   echo "  --help, -h         print this message and exit"
-  echo "  --no-headless, -H  don't run in headless mode"
+  echo "  --windowed, -w     don't run in headless mode (opens many windows)"
   echo "  --binary, -b PATH  specify binary (defaults to auto)"
   echo "  --update, -u       update the tps venv even if it seems unnecessary"
   echo "  --no-update, -n    don't bother checking if we should update the tps venv"
@@ -115,7 +115,7 @@ function tps
     set argv $argv[2..-1]
   end
 
-  argparse --name tps -x 'c,S,D,P' -x 'n,u' -N 0 -X 1 'h/help' 'H/no-headless' \
+  argparse --name tps -x 'c,S,D,P' -x 'n,u' -N 0 -X 1 'h/help' 'w/windowed' \
     'b/binary=' 'n/no-update' 'u/update' 'c/config=' 'S/stage' 'D/dev' \
     'P/prod' 'r/raw' 'i/only-used' -- $argv
   or begin
@@ -134,7 +134,7 @@ function tps
   end
 
   set -lx MOZ_HEADLESS 1
-  if set -q _flag_H
+  if set -q _flag_w
     set -e MOZ_HEADLESS
   end
 
