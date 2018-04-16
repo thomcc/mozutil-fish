@@ -1,6 +1,5 @@
 
-
-function __fxa_authpw -S -a email pass
+function __fxacct_authpw -S -a email pass
   set -l gen_authpw_js '((email, pass) => {
     let qs = crypto.pbkdf2Sync(pass, "identity.mozilla.com/picl/v1/quickStretch:"+email, 1000, 32, "sha256");
     return crypto.createHmac("sha256", crypto.createHmac("sha256", new Buffer(8 * 4)).update(qs).digest())
@@ -9,14 +8,42 @@ function __fxa_authpw -S -a email pass
   node -r crypto -pe $gen_authpw_js $email $pass
 end
 
+function __fxacct_usage
+  echo "Usage: fxacct action username password [stack]"
+  echo ""
+  echo "Create or destroy firefox accounts across various stacks."
+  echo ""
+  echo "Parameters:"
+  echo "  action          Either 'create' or 'destroy'"
+  echo "  username        Email or restmail username. Restmail emails will be autoverified."
+  echo "  password        Account password."
+  echo "  stack           One of prod, stage, dev, or a URL, defaults to prod."
+  echo "                  (URLs are expected to begin with 'http://' or 'https://')"
+  echo ""
+  echo "Note: This tool expects `jq` and `node` to be in the PATH"
+end
+
 function fxacct -a action email password stack
-  if not type -q jq
-    echo "Error: No jq command found in the environment. Required."
+
+  if test (count $argv) -lt 3
+    __fxacct_usage
     return 1
   end
+
+  if not type -q jq;
+    echo "Error: No jq command found in the path. Required."
+    return 1
+  end
+
+  if not type -q node
+    echo "Error: no node command found in the path. Required."
+    return 1
+  end
+
   if test -z "$stack"
     set stack "prod"
   end
+
   set fxa_server
   set restmail_user
   if string match -qr '@restmail\.net$' $email
@@ -42,7 +69,7 @@ function fxacct -a action email password stack
     end
   case '*'
     echo "Unknown stack $stack"
-    echo "Usage: fxacct create|destroy email password [stage|dev|prod|<url> = prod]"
+    __fxacct_usage
     return 1
   end
 
@@ -50,7 +77,7 @@ function fxacct -a action email password stack
 
   switch $action
   case create destroy
-    set -l authpw (__fxa_authpw $email $password)
+    set -l authpw (__fxacct_authpw $email $password)
     # @@TODO: how does preVerified work???
     set -l json "{\"email\":\"$email\",\"authPW\":\"$authpw\"}"
     set -l uri "$fxa_server/v1/account/$action"
@@ -138,7 +165,8 @@ function fxacct -a action email password stack
     end
 
   case '*'
-    echo "Usage: fxacct create|destroy email password [stage|dev|prod|<url> = prod]"
+    echo "fxacct: Unknown action"
+    __fxacct_usage
     return 1
   end
 end

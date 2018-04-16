@@ -250,7 +250,7 @@ function tps
     set -l prefix ''
     # set -l phase_start_time 0
     if test -n "$multiple_tests"
-      set num_tests (cat $test_root/$testfile | jq -r '.tests | length' ^ /dev/null)
+      set num_tests (cat $test_root/$testfile | jq -r '.tests | length' 2> /dev/null)
       if test -z "$num_tests"; or test $num_tests -eq 0
         set num_tests 0
       end
@@ -267,9 +267,9 @@ function tps
         # set phase_start_time 0
         set cur_action 0
         if test -f "$fullpath"
-          set cur_phase_json (cat $fullpath | string join ' ' | string replace -r '^[^\}]+\{(.+?)\}.*$' '{$1}' | jq '.' -c ^ /dev/null)
-          set num_phases (echo $cur_phase_json | jq -r 'keys | length' ^ /dev/null)
-          set num_profiles (echo $cur_phase_json | jq -r 'to_entries | map(.value) | unique | length' ^ /dev/null)
+          set cur_phase_json (cat $fullpath | string join ' ' | string replace -r '^[^\}]+\{(.+?)\}.*$' '{$1}' | jq '.' -c 2> /dev/null)
+          set num_phases (echo $cur_phase_json | jq -r 'keys | length' 2> /dev/null)
+          set num_profiles (echo $cur_phase_json | jq -r 'to_entries | map(.value) | unique | length' 2> /dev/null)
           if test -z "$num_phases"
             set num_phases 0
           end
@@ -310,7 +310,7 @@ function tps
             set phase_msg (echo -sn '|' (__tps_setcolor blue) "cleanup$clean_idx" (__tps_setcolor normal) '/' \
               (__tps_setcolor blue) $num_profiles (__tps_setcolor normal))
           else
-            set cur_profile (echo $cur_phase_json | jq -r ".$cur_phase" ^ /dev/null)
+            set cur_profile (echo $cur_phase_json | jq -r ".$cur_phase" 2> /dev/null)
             if test "$cur_profile" = 'null'
               set cur_profile ''
             end
