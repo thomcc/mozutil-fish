@@ -2,7 +2,7 @@
 function __fxacct_authpw -S -a email pass
   set -l gen_authpw_js '((email, pass) => {
     let qs = crypto.pbkdf2Sync(pass, "identity.mozilla.com/picl/v1/quickStretch:"+email, 1000, 32, "sha256");
-    return crypto.createHmac("sha256", crypto.createHmac("sha256", new Buffer(8 * 4)).update(qs).digest())
+    return crypto.createHmac("sha256", crypto.createHmac("sha256", Buffer.alloc(8 * 4)).update(qs).digest())
       .update("identity.mozilla.com/picl/v1/authPW\\x01").digest().toString("hex");
     })(process.argv[1], process.argv[2])'
   node -r crypto -pe $gen_authpw_js $email $pass
